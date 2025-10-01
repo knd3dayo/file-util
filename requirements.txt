@@ -1,0 +1,18 @@
+python-dotenv
+pydantic
+
+# For File,Excel
+magika
+pillow
+python-docx
+python-dotenv
+python-pptx
+openpyxl
+markdown
+pdfminer.six
+beautifulsoup4
+chardet
+aiofiles
+
+# For MCP
+fastmcp

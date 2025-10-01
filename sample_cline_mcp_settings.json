@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "extract_file_mcp": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "<PATH_TO_VENV>",
+        "run",
+        "-m",
+        "extract_file_mcp.mcp_modules.mcp_server"
+      ]
+    }
+  }
+}
