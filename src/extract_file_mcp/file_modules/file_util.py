@@ -1,13 +1,9 @@
-from typing import Optional, Union
 from magika import Magika
 from magika.types import MagikaResult 
 from chardet.universaldetector import UniversalDetector
 from pathlib import Path
 import aiofiles # type: ignore
 from extract_file_mcp.file_modules.excel_util import ExcelUtil
-import json
-import os
-import base64
 import aiofiles
 
 import extract_file_mcp.log_modules.log_settings as log_settings
@@ -62,6 +58,11 @@ class FileUtil:
 
             return None, None
         # エンコーディング判定
+        encoding = cls.get_encoding_from_bytes(byte_data)
+        return encoding
+    
+    @classmethod
+    def get_encoding_from_bytes(cls, byte_data: bytes):
         detector = UniversalDetector()
         detector.feed(byte_data)
         detector.close()

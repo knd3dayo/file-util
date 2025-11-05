@@ -14,5 +14,9 @@ beautifulsoup4
 chardet
 aiofiles
 
+#ｆor ZIP
+pyzipper
+
 # For MCP
 fastmcp
+
