@@ -20,3 +20,5 @@ pyzipper
 # For MCP
 fastmcp
 
+# For API
+fastapi

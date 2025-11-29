@@ -3,10 +3,10 @@ from magika.types import MagikaResult
 from chardet.universaldetector import UniversalDetector
 from pathlib import Path
 import aiofiles # type: ignore
-from extract_file_mcp.file_modules.excel_util import ExcelUtil
+from file_util.file.excel_util import ExcelUtil
 import aiofiles
 
-import extract_file_mcp.log_modules.log_settings as log_settings
+import file_util.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)
 
 class FileUtil:

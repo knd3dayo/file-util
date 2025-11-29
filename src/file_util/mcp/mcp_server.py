@@ -4,10 +4,10 @@ from dotenv import load_dotenv
 import argparse
 from fastmcp import FastMCP
 from pydantic import Field
-from extract_file_mcp.file_modules.file_util import FileUtil
-from extract_file_mcp.file_modules.zip_util import ZipUtil
+from file_util.file.file_util import FileUtil
+from file_util.file.zip_util import ZipUtil
 
-mcp = FastMCP("extract_file_mcp") #type :ignore
+mcp = FastMCP("file_util") #type :ignore
 
 async def extract_text_from_file_mcp(
     file_path: Annotated[str, Field(description="Path to the file to extract text from")]
