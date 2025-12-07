@@ -2,18 +2,30 @@ from magika import Magika
 from magika.types import MagikaResult 
 from chardet.universaldetector import UniversalDetector
 from pathlib import Path
-import aiofiles # type: ignore
 from file_util.file.excel_util import ExcelUtil
-import aiofiles
+from file_util.file.ppt_util import PPTUtil
+from file_util.file.word_util import WordUtil
+from file_util.file.text_util import TextUtil
+from file_util.file.pdf_util import PDFUtil
 
 import file_util.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)
 
 class FileUtil:
+    """ファイル操作のユーティリティクラス"""
 
-    @classmethod    
+    @classmethod
     def sanitize_text(cls, text: str) -> str:
-        # テキストをサニタイズする
+        """テキストをサニタイズする
+
+        複数の改行や空白を1つにまとめて、テキストを整形します。
+
+        Args:
+            text: サニタイズ対象のテキスト
+
+        Returns:
+            サニタイズされたテキスト。入力が空の場合は空文字列
+        """
         # textが空の場合は空の文字列を返す
         if not text or len(text) == 0:
             return ""
@@ -27,6 +39,16 @@ class FileUtil:
 
     @classmethod
     def identify_type(cls, filename):
+        """ファイルのMIMEタイプとエンコーディングを判定する
+
+        Args:
+            filename: 判定対象のファイルパス
+
+        Returns:
+            tuple[MagikaResult | None, str | None]:
+                MagikaResultオブジェクトとエンコーディング文字列のタプル。
+                判定失敗時は(None, None)
+        """
         m = Magika()
         # ファイルの種類を判定
         path = Path(filename)
@@ -43,6 +65,16 @@ class FileUtil:
 
     @classmethod
     def get_encoding(cls, filename):
+        """ファイルのエンコーディングを判定する
+
+        ファイルの先頭8192バイトを読み込んで、エンコーディングを判定します。
+
+        Args:
+            filename: 判定対象のファイルパス
+
+        Returns:
+            str | None: エンコーディング文字列。判定失敗時はNone
+        """
         # ファイルのbyte列を取得
         # アクセスできない場合は例外をキャッチ
         try:
@@ -63,6 +95,14 @@ class FileUtil:
     
     @classmethod
     def get_encoding_from_bytes(cls, byte_data: bytes):
+        """バイト列からエンコーディングを判定する
+
+        Args:
+            byte_data: 判定対象のバイト列
+
+        Returns:
+            str: エンコーディング文字列
+        """
         detector = UniversalDetector()
         detector.feed(byte_data)
         detector.close()
@@ -71,6 +111,14 @@ class FileUtil:
 
     @classmethod
     def get_mime_type(cls, filename):
+        """ファイルのMIMEタイプを取得する
+
+        Args:
+            filename: 対象ファイルパス
+
+        Returns:
+            str | None: MIMEタイプ文字列。判定失敗時はNone
+        """
         res, encoding = cls.identify_type(filename)
         if res is None:
             return None
@@ -78,6 +126,16 @@ class FileUtil:
 
     @classmethod
     async def extract_text_from_file_async(cls, filename) -> str:
+        """ファイルからテキストを非同期で抽出する
+
+        対応形式: テキストファイル、PDF、Excel、Word、PowerPoint
+
+        Args:
+            filename: 抽出対象のファイルパス
+
+        Returns:
+            str: 抽出されたテキスト。サニタイズ済み。非対応形式の場合は空文字列
+        """
         res, encoding = cls.identify_type(filename)
         
         if res is None:
@@ -85,11 +143,11 @@ class FileUtil:
         logger.debug(res.output.mime_type)
         result = None        
         if res.output.mime_type.startswith("text/"):
-            result = await cls.process_text_async(filename, res, encoding)
+            result = await TextUtil.process_text_async(filename, res, encoding)
 
         # application/pdf
         elif res.output.mime_type == "application/pdf":
-            result = cls.process_pdf(filename)
+            result = PDFUtil.extract_text_from_pdf(filename)
             
         # application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
         elif res.output.mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
@@ -97,89 +155,13 @@ class FileUtil:
             
         # application/vnd.openxmlformats-officedocument.wordprocessingml.document
         elif res.output.mime_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-            result = cls.process_docx(filename)
+            result = WordUtil.extract_text_from_docx(filename)
             
         # application/vnd.openxmlformats-officedocument.presentationml.presentation
         elif res.output.mime_type == "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-            result = cls.process_pptx(filename)
+            result = PPTUtil.extract_texte_from_pptx(filename)
         else:
             logger.error("Unsupported file type: " + res.output.mime_type)
 
         return cls.sanitize_text(result if result is not None else "")
-
-    # application/pdfのファイルを読み込んで文字列として返す関数
-    @classmethod
-    def process_pdf(cls, filename):
-        from pdfminer.high_level import extract_text
-        text = extract_text(filename)
-        return text
-
-    # application/vnd.openxmlformats-officedocument.wordprocessingml.documentのファイルを読み込んで文字列として返す関数
-    @classmethod
-    def process_docx(cls, filename):
-        import docx
-        from io import StringIO
-        # 出力用のストリームを作成
-        output = StringIO()
-        doc = docx.Document(filename)
-        for para in doc.paragraphs:
-            output.write(para.text)
-            output.write("\n")
-            
-        return output.getvalue()
-
-    # application/vnd.openxmlformats-officedocument.presentationml.presentationのファイルを読み込んで文字列として返す関数
-    @classmethod
-    def process_pptx(cls, filename):
-        import pptx
-        from io import StringIO
-        # 出力用のストリームを作成
-        output = StringIO()
-        prs = pptx.Presentation(filename)
-        for slide in prs.slides:
-            for shape in slide.shapes:
-                if hasattr(shape, "text"):
-                    output.write(shape.text) # type: ignore
-                    output.write("\n")
-        
-        return output.getvalue()
-
-    # text/*のファイルを読み込んで文字列として返す関数
-    @classmethod
-    async def process_text_async(cls, filename, res, encoding):
-        result = ""
-        if res.output.mime_type == "text/html":
-            # text/htmlの場合
-            from bs4 import BeautifulSoup
-            # テキストを取得
-            async with aiofiles.open(filename, "rb") as f:
-                text_data = await f.read()
-                soup = BeautifulSoup(text_data, "html.parser")
-            result = soup.get_text()
-
-        elif res.output.mime_type == "text/xml":
-            # text/xmlの場合
-            from bs4 import BeautifulSoup
-            # テキストを取得
-            async with aiofiles.open(filename, "rb") as f:
-                text_data = await f.read()
-                soup = BeautifulSoup(text_data, features="xml")
-            result = soup.get_text()
-
-        elif res.output.mime_type == "text/markdown":
-            # markdownの場合
-            from bs4 import BeautifulSoup
-            from markdown import markdown # type: ignore
-            # テキストを取得
-            async with aiofiles.open(filename, "r" ,encoding=encoding, errors='ignore') as f:
-                text_data = await f.read()
-                md = markdown(text_data)
-                soup = BeautifulSoup(md, "html.parser")
-            result = soup.get_text()
-        else:
-            # その他のtext/*の場合
-            async with aiofiles.open(filename, "r", encoding=encoding, errors='ignore') as f:
-                result = await f.read()
-            
-        return result
 
