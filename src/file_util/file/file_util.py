@@ -1,3 +1,5 @@
+import base64
+import os
 from magika import Magika
 from magika.types import MagikaResult 
 from chardet.universaldetector import UniversalDetector
@@ -165,3 +167,30 @@ class FileUtil:
 
         return cls.sanitize_text(result if result is not None else "")
 
+    @classmethod
+    async def extract_base64_to_text(cls, extension: str, base64_data: str) -> str:
+
+        # サイズが0の場合は空文字を返す
+        if not base64_data or len(base64_data) == 0:
+            return ""
+
+        # base64からバイナリデータに変換
+        base64_data_bytes = base64.b64decode(base64_data)
+
+        # 拡張子の指定。extensionがNoneまたは空の場合は設定しない.空でない場合は"."を先頭に付与
+        suffix = ""
+        if extension is not None and extension != "":
+            suffix = "." + extension
+        # base64データから一時ファイルを生成
+        import aiofiles.tempfile
+        async with aiofiles.tempfile.NamedTemporaryFile(mode="wb", delete=False, suffix=suffix) as temp:
+            await temp.write(base64_data_bytes)
+            await temp.close()
+            # 一時ファイルからテキストを抽出
+            temp_path = temp.name if isinstance(temp.name, str) else str(temp.name)
+            text = await FileUtil.extract_text_from_file_async(temp_path)
+            # 一時ファイルを削除
+            os.remove(temp_path)
+            return text
+
+        return text

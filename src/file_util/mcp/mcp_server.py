@@ -1,54 +1,17 @@
 import asyncio
-from typing import Annotated, Optional
 from dotenv import load_dotenv
 import argparse
 from fastmcp import FastMCP
-from pydantic import Field
-from file_util.file.file_util import FileUtil
-from file_util.file.zip_util import ZipUtil
-
+from file_util.api.api_server import (
+    get_mime_type,
+    get_sheet_names,
+    extract_excel_sheet,
+    extract_text_from_file,
+    list_zip_contents,
+    extract_zip,
+    create_zip,
+)
 mcp = FastMCP("file_util") #type :ignore
-
-async def extract_text_from_file_mcp(
-    file_path: Annotated[str, Field(description="Path to the file to extract text from")]
-    ) -> Annotated[str, Field(description="Extracted text from the file")]:
-    """
-    This function extracts text from a file at the specified path.
-    """
-    return await FileUtil.extract_text_from_file_async(file_path)
-
-# ZIPファイルの内容をリストする関数
-async def list_zip_contents_mcp(
-    file_path: Annotated[str, Field(description="Path to the ZIP file to list contents from. **Absolute path required**")]
-    ) -> Annotated[list[str], Field(description="List of file names in the ZIP archive")]:
-    """
-    This function lists the contents of a ZIP file at the specified path.
-    """
-    return ZipUtil.list_zip_contents(file_path)
-
-# ZIPファイルを展開する関数
-async def extract_zip_mcp(
-    file_path: Annotated[str, Field(description="Path to the ZIP file to extract. **Absolute path required**")],
-    extract_to: Annotated[str, Field(description="Directory to extract the ZIP contents to. **Absolute path required**")],
-    password: Annotated[Optional[str], Field(description="Password for the ZIP file, if any")] = None
-    ) -> Annotated[bool, Field(description="True if extraction was successful")]:
-
-    """
-    This function extracts a ZIP file at the specified path.
-    """
-    return ZipUtil.extract_zip(file_path, extract_to, password)
-
-# ZIPファイルを作成する関数
-async def create_zip_mcp(
-    file_paths: Annotated[list[str], Field(description="List of file or directory paths to include in the ZIP. **Absolute paths required**")],
-    output_zip: Annotated[str, Field(description="Path to the output ZIP file. **Absolute path required**")],
-    password: Annotated[Optional[str], Field(description="Password for the ZIP file, if any")] = None
-    ) -> Annotated[bool, Field(description="True if ZIP creation was successful")]:
-
-    """
-    This function creates a ZIP file at the specified path.
-    """
-    return ZipUtil.create_zip(file_paths, output_zip, password)
 
 # 引数解析用の関数
 def parse_args() -> argparse.Namespace:
@@ -86,10 +49,14 @@ async def main():
                 print(f"Warning: Tool '{tool_name}' not found or not callable. Skipping registration.")
     else:
         # デフォルトのツールを登録
-        mcp.tool()(extract_text_from_file_mcp)
-        mcp.tool()(list_zip_contents_mcp)
-        mcp.tool()(extract_zip_mcp)
-        mcp.tool()(create_zip_mcp)
+        mcp.tool()(get_mime_type)
+        mcp.tool()(get_sheet_names)
+        mcp.tool()(extract_excel_sheet)
+        mcp.tool()(extract_text_from_file)
+        mcp.tool()(list_zip_contents)
+        mcp.tool()(extract_zip)
+        mcp.tool()(create_zip)
+
 
     if mode == "stdio":
         await mcp.run_async()
