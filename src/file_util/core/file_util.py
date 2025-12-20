@@ -4,11 +4,11 @@ from magika import Magika
 from magika.types import MagikaResult 
 from chardet.universaldetector import UniversalDetector
 from pathlib import Path
-from file_util.file.excel_util import ExcelUtil
-from file_util.file.ppt_util import PPTUtil
-from file_util.file.word_util import WordUtil
-from file_util.file.text_util import TextUtil
-from file_util.file.pdf_util import PDFUtil
+from file_util.core.excel_util import ExcelUtil
+from file_util.core.ppt_util import PPTUtil
+from file_util.core.word_util import WordUtil
+from file_util.core.text_util import TextUtil
+from file_util.core.pdf_util import PDFUtil
 
 import file_util.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)

@@ -1,133 +1,52 @@
-import asyncio
-from typing import Annotated, Optional
-from pydantic import Field
-from file_util.file.file_util import FileUtil
-from file_util.file.excel_util import ExcelUtil
-from file_util.file.zip_util import ZipUtil
 
+from file_util.core.app import (
+    get_mime_type,
+    get_sheet_names,
+    extract_excel_sheet,
+    extract_text_from_file,
+    extract_base64_to_text,
+    export_to_excel,
+    import_from_excel,
+    extract_text_from_file,
+    list_zip_contents,
+    extract_zip,
+    create_zip,
+)
 from fastapi import FastAPI
 app = FastAPI()
 # get_mime_type
-@app.get('/get_mime_type')
-async def get_mime_type(
-    file_path: Annotated[str, Field(description="Path to the file to get MIME type for")]
-    ) -> Annotated[Optional[str], Field(description="MIME type of the file. None if undetectable")]:
-    """
-    This function gets the MIME type of a file at the specified path.
-    """
-    response = FileUtil.get_mime_type(file_path)
-    return response
-
+app.add_api_route(path='/get_mime_type', endpoint=get_mime_type, methods=['GET'])
+ 
 # get_sheet_names
-@app.get('/get_sheet_names')
-async def get_sheet_names(
-    file_path: Annotated[str, Field(description="Path to the Excel file to get sheet names for")]
-    ) -> Annotated[list[str], Field(description="List of sheet names in the Excel file")]:
-    """
-    This function gets the sheet names of an Excel file at the specified path.
-    """
-    response = ExcelUtil.get_sheet_names(file_path)
-    return response
+app.add_api_route(path='/get_sheet_names', endpoint=get_sheet_names, methods=['GET'])
 
 # extract_excel_sheet
-@app.post('/extract_excel_sheet')
-async def extract_excel_sheet(
-    file_path: Annotated[str, Field(description="Path to the Excel file to extract text from")],
-    sheet_name: Annotated[str, Field(description="Name of the sheet to extract text from")]
-    ) -> Annotated[str, Field(description="Extracted text from the specified Excel sheet")]:
-    """
-    This function extracts text from a specified sheet in an Excel file.
-    """
-    response = ExcelUtil.extract_text_from_sheet(file_path, sheet_name)
-    return response
+app.add_api_route(path='/extract_excel_sheet', endpoint=extract_excel_sheet, methods=['POST'])
 
 # extract_text_from_file
-@app.post('/extract_text_from_file')
-async def extract_text_from_file(
-    file_path: Annotated[str, Field(description="Path to the file to extract text from")]
-    ) -> Annotated[str, Field(description="Extracted text from the file")]:
-    """
-    This function extracts text from a specified file.
-    """
-    response: str = await FileUtil.extract_text_from_file_async(file_path)
-    return response
+app.add_api_route(path='/extract_text_from_file', endpoint=extract_text_from_file, methods=['POST'])
 
 # extract_base64_to_text
-@app.get('/extract_base64_to_text')
-async def extract_base64_to_text(
-    extension: Annotated[str, Field(description="File extension of the base64 data")],
-    base64_data: Annotated[str, Field(description="Base64 encoded data to extract text from")]
-    ) -> Annotated[str, Field(description="Extracted text from the base64 data")]:
-    """
-    This function extracts text from base64 encoded data with a specified file extension.
-    """
-    response = await FileUtil.extract_base64_to_text(extension, base64_data)
-    return response
+app.add_api_route(path='/extract_base64_to_text', endpoint=extract_base64_to_text, methods=['GET'])
 
 # export_to_excel
-@app.get('/export_to_excel')
-async def export_to_excel(
-    file_path: Annotated[str, Field(description="Path to the Excel file to export to")], 
-    columns: Annotated[list[str], Field(description="Columns to export") ]) -> None:
-    """
-    This function exports data to an Excel file at the specified path with given columns.
-    """
-
-    response = ExcelUtil.export_to_excel(file_path, columns)
-    return response
+app.add_api_route(path='/export_to_excel', endpoint=export_to_excel, methods=['GET'])
 
 # import_from_excel
-@app.get('/import_from_excel')
-async def import_from_excel(
-    file_path: Annotated[str, Field(description="Path to the Excel file to import from")]
-    ) -> Annotated[list[dict], Field(description="Data imported from the Excel file")]:
-    """
-    This function imports data from an Excel file at the specified path.
-    """
-    response = ExcelUtil.import_from_excel(file_path)
-    return response
+app.add_api_route(path='/import_from_excel', endpoint=import_from_excel, methods=['GET'])
 
-
-async def extract_text_from_file_mcp(
-    file_path: Annotated[str, Field(description="Path to the file to extract text from")]
-    ) -> Annotated[str, Field(description="Extracted text from the file")]:
-    """
-    This function extracts text from a file at the specified path.
-    """
-    return await FileUtil.extract_text_from_file_async(file_path)
+# extract_text_from_file
+app.add_api_route(path='/extract_text_from_file', endpoint=extract_text_from_file, methods=['POST'])
 
 # ZIPファイルの内容をリストする関数
-async def list_zip_contents(
-    file_path: Annotated[str, Field(description="Path to the ZIP file to list contents from. **Absolute path required**")]
-    ) -> Annotated[list[str], Field(description="List of file names in the ZIP archive")]:
-    """
-    This function lists the contents of a ZIP file at the specified path.
-    """
-    return ZipUtil.list_zip_contents(file_path)
+app.add_api_route(path='/list_zip_contents', endpoint=list_zip_contents, methods=['GET'])
 
 # ZIPファイルを展開する関数
-async def extract_zip(
-    file_path: Annotated[str, Field(description="Path to the ZIP file to extract. **Absolute path required**")],
-    extract_to: Annotated[str, Field(description="Directory to extract the ZIP contents to. **Absolute path required**")],
-    password: Annotated[Optional[str], Field(description="Password for the ZIP file, if any")] = None
-    ) -> Annotated[bool, Field(description="True if extraction was successful")]:
-
-    """
-    This function extracts a ZIP file at the specified path.
-    """
-    return ZipUtil.extract_zip(file_path, extract_to, password)
+app.add_api_route(path='/extract_zip', endpoint=extract_zip, methods=['POST'])
 
 # ZIPファイルを作成する関数
-async def create_zip(
-    file_paths: Annotated[list[str], Field(description="List of file or directory paths to include in the ZIP. **Absolute paths required**")],
-    output_zip: Annotated[str, Field(description="Path to the output ZIP file. **Absolute path required**")],
-    password: Annotated[Optional[str], Field(description="Password for the ZIP file, if any")] = None
-    ) -> Annotated[bool, Field(description="True if ZIP creation was successful")]:
+app.add_api_route(path='/create_zip', endpoint=create_zip, methods=['POST'])
 
-    """
-    This function creates a ZIP file at the specified path.
-    """
-    return ZipUtil.create_zip(file_paths, output_zip, password)
 
 if __name__ == "__main__":
     import uvicorn
