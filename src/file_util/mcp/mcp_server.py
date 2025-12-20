@@ -8,8 +8,6 @@ from file_util.core.app import (
     extract_excel_sheet,
     extract_text_from_file,
     extract_base64_to_text,
-    export_to_excel,
-    import_from_excel,
     extract_text_from_file,
     list_zip_contents,
     extract_zip,
@@ -58,8 +56,6 @@ async def main():
         mcp.tool()(extract_zip)
         mcp.tool()(create_zip)
         mcp.tool()(extract_base64_to_text)
-        mcp.tool()(export_to_excel)
-        mcp.tool()(import_from_excel)
 
     if mode == "stdio":
         await mcp.run_async()

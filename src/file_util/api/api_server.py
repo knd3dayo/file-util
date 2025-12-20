@@ -5,8 +5,6 @@ from file_util.core.app import (
     extract_excel_sheet,
     extract_text_from_file,
     extract_base64_to_text,
-    export_to_excel,
-    import_from_excel,
     extract_text_from_file,
     list_zip_contents,
     extract_zip,
@@ -28,12 +26,6 @@ app.add_api_route(path='/extract_text_from_file', endpoint=extract_text_from_fil
 
 # extract_base64_to_text
 app.add_api_route(path='/extract_base64_to_text', endpoint=extract_base64_to_text, methods=['GET'])
-
-# export_to_excel
-app.add_api_route(path='/export_to_excel', endpoint=export_to_excel, methods=['GET'])
-
-# import_from_excel
-app.add_api_route(path='/import_from_excel', endpoint=import_from_excel, methods=['GET'])
 
 # extract_text_from_file
 app.add_api_route(path='/extract_text_from_file', endpoint=extract_text_from_file, methods=['POST'])

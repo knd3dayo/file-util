@@ -22,3 +22,6 @@ fastmcp
 
 # For API
 fastapi
+
+# For SMB
+smbprotocol
