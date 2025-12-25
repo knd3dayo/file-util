@@ -1,6 +1,6 @@
 from typing import Annotated, Optional, Any
 from pydantic import Field
-from file_util.core.file_util import FileUtil
+from file_util.core.file_util import FileUtil, DocumentType
 from file_util.core.excel_util import ExcelUtil
 from file_util.core.zip_util import ZipUtil
 
@@ -10,8 +10,8 @@ async def get_mime_type(
     """
     This function gets the MIME type of a file at the specified path.
     """
-    response = FileUtil.get_mime_type(file_path)
-    return response
+    document_type = DocumentType(document_path=file_path)
+    return document_type.mime_type
 
 # get_sheet_names
 async def get_sheet_names(

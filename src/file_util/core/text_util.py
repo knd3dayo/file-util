@@ -3,9 +3,9 @@ import aiofiles
 class TextUtil:
     # text/*のファイルを読み込んで文字列として返す関数
     @classmethod
-    async def process_text_async(cls, filename, res, encoding):
+    async def process_text_async(cls, filename, mime_type, encoding):
         result = ""
-        if res.output.mime_type == "text/html":
+        if mime_type == "text/html":
             # text/htmlの場合
             from bs4 import BeautifulSoup
             # テキストを取得
@@ -14,7 +14,7 @@ class TextUtil:
                 soup = BeautifulSoup(text_data, "html.parser")
             result = soup.get_text()
 
-        elif res.output.mime_type == "text/xml":
+        elif mime_type == "text/xml":
             # text/xmlの場合
             from bs4 import BeautifulSoup
             # テキストを取得
@@ -23,7 +23,7 @@ class TextUtil:
                 soup = BeautifulSoup(text_data, features="xml")
             result = soup.get_text()
 
-        elif res.output.mime_type == "text/markdown":
+        elif mime_type == "text/markdown":
             # markdownの場合
             from bs4 import BeautifulSoup
             from markdown import markdown # type: ignore

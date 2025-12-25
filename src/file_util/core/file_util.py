@@ -16,7 +16,80 @@ logger = log_settings.getLogger(__name__)
 
 
 class DocumentType(BaseModel):
-    mime_type: str = Field(..., description="MIME type of the document type")
+
+    document_path: str = Field(..., description="Path to the document")
+
+    def __init__(self, **data):
+        super().__init__(**data)
+
+        mime_type, encoding = DocumentType.identify_type(self.document_path)
+
+        self.mime_type: str = mime_type if mime_type is not None else "application/octet-stream"
+        self.encoding: str | None = encoding
+
+    @classmethod
+    def identify_type(cls, filename) -> tuple[str | None, str | None]:
+        """ファイルのMIMEタイプとエンコーディングを判定する
+
+        Args:
+            filename: 判定対象のファイルパス
+
+        Returns:
+            tuple[str | None, str | None]:
+                MIMEタイプ文字列とエンコーディング文字列のタプル。
+                判定失敗時は(None, None)
+        """
+        m = Magika()
+        # ファイルの種類を判定
+        path = Path(filename)
+        try:
+            res: MagikaResult = m.identify_path(path) # type: ignore
+            encoding = None
+            if res.dl.is_text:
+                encoding = cls.get_encoding(filename)
+
+        except Exception as e:
+            logger.debug(e)
+            return None, None
+
+        return res.output.mime_type , encoding
+
+    @classmethod
+    def get_encoding(cls, filename) -> str | None:
+        """ファイルのエンコーディングを判定する
+
+        ファイルの先頭8192バイトを読み込んで、エンコーディングを判定します。
+
+        Args:
+            filename: 判定対象のファイルパス
+
+        Returns:
+            str | None: エンコーディング文字列。判定失敗時はNone
+        """
+        # ファイルのbyte列を取得
+        # アクセスできない場合は例外をキャッチ
+        with open(filename, "rb") as f:
+            # 1KB読み込む
+            byte_data = f.read(8192)
+            # エンコーディング判定
+            encoding = cls.get_encoding_from_bytes(byte_data)
+            return encoding
+    
+    @classmethod
+    def get_encoding_from_bytes(cls, byte_data: bytes) -> str | None:
+        """バイト列からエンコーディングを判定する
+
+        Args:
+            byte_data: 判定対象のバイト列
+
+        Returns:
+            str | None: エンコーディング文字列。判定失敗時はNone
+        """
+        detector = UniversalDetector()
+        detector.feed(byte_data)
+        detector.close()
+        encoding = detector.result['encoding']  
+        return encoding
 
     def is_text(self) -> bool:
         """Check if the document type is a text type based on its MIME type."""
@@ -77,93 +150,6 @@ class FileUtil:
         return text
 
     @classmethod
-    def identify_type(cls, filename):
-        """ファイルのMIMEタイプとエンコーディングを判定する
-
-        Args:
-            filename: 判定対象のファイルパス
-
-        Returns:
-            tuple[MagikaResult | None, str | None]:
-                MagikaResultオブジェクトとエンコーディング文字列のタプル。
-                判定失敗時は(None, None)
-        """
-        m = Magika()
-        # ファイルの種類を判定
-        path = Path(filename)
-        try:
-            res: MagikaResult = m.identify_path(path) # type: ignore
-            encoding = None
-            if res.dl.is_text:
-                encoding = cls.get_encoding(filename)
-        except Exception as e:
-            logger.debug(e)
-            return None, None
-
-        return res, encoding
-
-    @classmethod
-    def get_encoding(cls, filename):
-        """ファイルのエンコーディングを判定する
-
-        ファイルの先頭8192バイトを読み込んで、エンコーディングを判定します。
-
-        Args:
-            filename: 判定対象のファイルパス
-
-        Returns:
-            str | None: エンコーディング文字列。判定失敗時はNone
-        """
-        # ファイルのbyte列を取得
-        # アクセスできない場合は例外をキャッチ
-        try:
-            with open(filename, "rb") as f:
-                # 1KB読み込む
-                byte_data = f.read(8192)
-                if not byte_data:
-                    return None, None
-        except Exception as e:
-            logger.error(e)
-            import traceback
-            logger.error(traceback.format_exc())
-
-            return None, None
-        # エンコーディング判定
-        encoding = cls.get_encoding_from_bytes(byte_data)
-        return encoding
-    
-    @classmethod
-    def get_encoding_from_bytes(cls, byte_data: bytes):
-        """バイト列からエンコーディングを判定する
-
-        Args:
-            byte_data: 判定対象のバイト列
-
-        Returns:
-            str: エンコーディング文字列
-        """
-        detector = UniversalDetector()
-        detector.feed(byte_data)
-        detector.close()
-        encoding = detector.result['encoding']  
-        return encoding
-
-    @classmethod
-    def get_mime_type(cls, filename):
-        """ファイルのMIMEタイプを取得する
-
-        Args:
-            filename: 対象ファイルパス
-
-        Returns:
-            str | None: MIMEタイプ文字列。判定失敗時はNone
-        """
-        res, encoding = cls.identify_type(filename)
-        if res is None:
-            return None
-        return res.output.mime_type
-
-    @classmethod
     async def extract_text_from_file_async(cls, filename) -> str:
         """ファイルからテキストを非同期で抽出する
 
@@ -175,16 +161,18 @@ class FileUtil:
         Returns:
             str: 抽出されたテキスト。サニタイズ済み。非対応形式の場合は空文字列
         """
-        res, encoding = cls.identify_type(filename)
+        document_type = DocumentType(document_path=filename)
+        encoding = document_type.encoding
+        mime_type = document_type.mime_type
         
-        if res is None:
+        if mime_type is None:
             return ""
-        logger.debug(res.output.mime_type)
+        logger.debug(mime_type)
         result = None        
-        document_type = DocumentType(mime_type=res.output.mime_type)
+
         if document_type.is_text():
             # テキストファイルの場合
-            result = await TextUtil.process_text_async(filename, res, encoding)
+            result = await TextUtil.process_text_async(filename, mime_type, encoding)
 
         # application/pdf
         elif document_type.is_pdf():
@@ -203,7 +191,7 @@ class FileUtil:
             result = PPTUtil.extract_text_from_pptx(filename)
 
         else:
-            logger.error("Unsupported file type: " + res.output.mime_type)
+            logger.error("Unsupported file type: " + mime_type)
 
         return cls.sanitize_text(result if result is not None else "")
 
