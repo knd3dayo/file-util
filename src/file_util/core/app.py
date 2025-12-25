@@ -1,8 +1,8 @@
 from typing import Annotated, Optional, Any
 from pydantic import Field
-from file_util.core.file_util import FileUtil, DocumentType
-from file_util.core.excel_util import ExcelUtil
-from file_util.core.zip_util import ZipUtil
+from file_util.util.file_util import FileUtil, DocumentType
+from file_util.util.excel_util import ExcelUtil
+from file_util.util.zip_util import ZipUtil
 
 async def get_mime_type(
     file_path: Annotated[str, Field(description="Path to the file to get MIME type for")]
