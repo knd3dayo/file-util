@@ -4,7 +4,7 @@ from io import StringIO
 class PPTUtil:
 
     @classmethod
-    def extract_texte_from_pptx(cls, filename):
+    def extract_text_from_pptx(cls, filename):
         """PowerPoint(PPTX)からテキストを抽出する
 
         Args:

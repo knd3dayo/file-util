@@ -10,9 +10,46 @@ from file_util.core.word_util import WordUtil
 from file_util.core.text_util import TextUtil
 from file_util.core.pdf_util import PDFUtil
 
+from pydantic import BaseModel, Field
 import file_util.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)
 
+
+class DocumentType(BaseModel):
+    mime_type: str = Field(..., description="MIME type of the document type")
+
+    def is_text(self) -> bool:
+        """Check if the document type is a text type based on its MIME type."""
+        return self.mime_type.startswith("text/")
+    
+    def is_pdf(self) -> bool:
+        """Check if the document type is a PDF type based on its MIME type."""
+        return self.mime_type == "application/pdf"
+    
+    def is_excel(self) -> bool:
+        """Check if the document type is an Excel type based on its MIME type."""
+        return self.mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    
+    def is_word(self) -> bool:
+        """Check if the document type is a Word type based on its MIME type."""
+        return self.mime_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    
+    def is_ppt(self) -> bool:
+        """Check if the document type is a PowerPoint type based on its MIME type."""
+        return self.mime_type == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    
+    def is_image(self) -> bool:
+        """Check if the document type is an image type based on its MIME type."""
+        return self.mime_type.startswith("image/")
+    
+    def is_office_document(self) -> bool:
+        """Check if the document type is any Office document type based on its MIME type."""
+        return self.is_excel() or self.is_word() or self.is_ppt()
+    
+    def is_unsupported(self) -> bool:
+        """Check if the document type is unsupported based on its MIME type."""
+        return not (self.is_text() or self.is_pdf() or self.is_office_document() or self.is_image())
+    
 class FileUtil:
     """ファイル操作のユーティリティクラス"""
 
@@ -144,24 +181,27 @@ class FileUtil:
             return ""
         logger.debug(res.output.mime_type)
         result = None        
-        if res.output.mime_type.startswith("text/"):
+        document_type = DocumentType(mime_type=res.output.mime_type)
+        if document_type.is_text():
+            # テキストファイルの場合
             result = await TextUtil.process_text_async(filename, res, encoding)
 
         # application/pdf
-        elif res.output.mime_type == "application/pdf":
+        elif document_type.is_pdf():
             result = PDFUtil.extract_text_from_pdf(filename)
             
         # application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-        elif res.output.mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        elif document_type.is_excel():
             result = ExcelUtil.extract_text_from_sheet(filename)
             
         # application/vnd.openxmlformats-officedocument.wordprocessingml.document
-        elif res.output.mime_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        elif document_type.is_word():
             result = WordUtil.extract_text_from_docx(filename)
             
         # application/vnd.openxmlformats-officedocument.presentationml.presentation
-        elif res.output.mime_type == "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-            result = PPTUtil.extract_texte_from_pptx(filename)
+        elif document_type.is_ppt():
+            result = PPTUtil.extract_text_from_pptx(filename)
+
         else:
             logger.error("Unsupported file type: " + res.output.mime_type)
 
