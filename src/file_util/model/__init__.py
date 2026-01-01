@@ -1,3 +1,4 @@
+from typing import Optional
 from magika import Magika
 from magika.types import MagikaResult 
 from chardet.universaldetector import UniversalDetector
@@ -10,6 +11,7 @@ logger = log_settings.getLogger(__name__)
 class DocumentType(BaseModel):
 
     data: bytes = Field(..., description="Document data as bytes")
+    filename: Optional[str] = Field(None, description="Filename of the document")
     __mime_type: str = PrivateAttr("")
     __encoding: str | None = PrivateAttr(None)
 
