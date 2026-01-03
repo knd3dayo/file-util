@@ -11,7 +11,7 @@ logger = log_settings.getLogger(__name__)
 class DocumentType(BaseModel):
 
     data: bytes = Field(..., description="Document data as bytes")
-    filename: str = Field(..., description="Filename of the document")
+    identifier: str = Field(..., description="Identifier of the document")
     __mime_type: str = PrivateAttr("")
     __encoding: str | None = PrivateAttr(None)
 
@@ -44,7 +44,7 @@ class DocumentType(BaseModel):
         with open(document_path, "rb") as f:
             byte_data = f.read()
         
-        return cls(data=byte_data)
+        return cls(data=byte_data, identifier=document_path)
 
     @classmethod
     def identify_data_type(cls, data: bytes) -> tuple[str | None, str | None]:
