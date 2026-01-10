@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, ClassVar
 from magika import Magika
 from magika.types import MagikaResult 
 from chardet.universaldetector import UniversalDetector
@@ -9,7 +9,7 @@ import file_util.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)
 
 class DocumentType(BaseModel):
-
+    
     data: bytes = Field(..., description="Document data as bytes")
     identifier: str = Field(..., description="Identifier of the document")
     __mime_type: str = PrivateAttr("")
@@ -135,7 +135,7 @@ class DocumentType(BaseModel):
         encoding = detector.result['encoding']  
         return encoding
 
-    def get_type(self) -> Literal["text", "pdf", "excel", "word", "ppt", "image", "unsupported"]:
+    def get_document_type(self) -> Literal["text", "pdf", "excel", "word", "ppt", "image", "unsupported"]:
         """Determine the document type based on its MIME type.
 
         Returns:

@@ -4,14 +4,14 @@ from file_util.util.file_util import FileUtil, DocumentType
 from file_util.util.excel_util import ExcelUtil
 from file_util.util.zip_util import ZipUtil
 
-async def get_type(
+async def get_document_type(
     file_path: Annotated[str, Field(description="Path to the file to get types for")]
     ) -> Annotated[Literal['text', 'pdf', 'excel', 'word', 'ppt', 'image', 'unsupported'], Field(description="Type of the document. None if undetectable")]:
     """
     This function gets the type of a file at the specified path.
     """
     document_type = DocumentType.from_file(document_path=file_path)
-    return document_type.get_type()
+    return document_type.get_document_type()
 
 async def get_mime_type(
     file_path: Annotated[str, Field(description="Path to the file to get MIME type for")]
