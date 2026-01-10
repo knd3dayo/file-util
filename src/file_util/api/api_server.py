@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter
 
 from file_util.core.app import (
+    get_type,
     get_mime_type,
     get_sheet_names,
     extract_excel_sheet,
@@ -13,6 +14,8 @@ from file_util.core.app import (
 )
 app = FastAPI()
 router = APIRouter()
+# get_type
+router.add_api_route(path='/get_type', endpoint=get_type, methods=['GET'])
 # get_mime_type
 router.add_api_route(path='/get_mime_type', endpoint=get_mime_type, methods=['GET'])
  

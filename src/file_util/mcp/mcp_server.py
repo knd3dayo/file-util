@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import argparse
 from fastmcp import FastMCP
 from file_util.core.app import (
+    get_type,
     get_mime_type,
     get_sheet_names,
     extract_excel_sheet,
@@ -48,6 +49,7 @@ async def main():
                 print(f"Warning: Tool '{tool_name}' not found or not callable. Skipping registration.")
     else:
         # デフォルトのツールを登録
+        mcp.tool()(get_type)
         mcp.tool()(get_mime_type)
         mcp.tool()(get_sheet_names)
         mcp.tool()(extract_excel_sheet)
