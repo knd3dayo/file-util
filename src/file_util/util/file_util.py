@@ -6,7 +6,7 @@ from file_util.util.word_util import WordUtil
 from file_util.util.text_util import TextUtil
 from file_util.util.pdf_util import PDFUtil
 
-from file_util.model import DocumentType
+from file_util.model import FileUtilDocument
 
 import file_util.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)
@@ -50,7 +50,7 @@ class FileUtil:
         Returns:
             str: 抽出されたテキスト。サニタイズ済み。非対応形式の場合は空文字列
         """
-        document_type = DocumentType.from_file(document_path=filename)
+        document_type = FileUtilDocument.from_file(document_path=filename)
         encoding = document_type.encoding
         mime_type = document_type.mime_type
         

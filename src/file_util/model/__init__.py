@@ -9,7 +9,7 @@ logger = log_settings.getLogger(__name__)
 
 from enum import StrEnum
 
-class DocumentTypeEnum(StrEnum):
+class FileUtilDocumentType(StrEnum):
     TEXT = "text"
     PDF = "pdf"
     EXCEL = "excel"
@@ -19,7 +19,7 @@ class DocumentTypeEnum(StrEnum):
     UNSUPPORTED = "unsupported"
 
 
-class DocumentType(BaseModel):
+class FileUtilDocument(BaseModel):
     
     data: bytes = Field(..., description="Document data as bytes")
     identifier: str = Field(..., description="Identifier of the document")
@@ -42,7 +42,7 @@ class DocumentType(BaseModel):
         self.__encoding = encoding
 
     @classmethod
-    def from_file(cls, document_path: str) -> "DocumentType":
+    def from_file(cls, document_path: str) -> "FileUtilDocument":
         """ファイルパスからDocumentTypeインスタンスを作成する
 
         Args:
@@ -146,7 +146,7 @@ class DocumentType(BaseModel):
         encoding = detector.result['encoding']  
         return encoding
 
-    def get_document_type(self) -> DocumentTypeEnum:
+    def get_document_type(self) -> FileUtilDocumentType:
         """Determine the document type based on its MIME type.
 
         Returns:
@@ -154,19 +154,19 @@ class DocumentType(BaseModel):
                 The determined document type.
         """
         if self.is_text():
-            return DocumentTypeEnum.TEXT
+            return FileUtilDocumentType.TEXT
         elif self.is_pdf():
-            return DocumentTypeEnum.PDF
+            return FileUtilDocumentType.PDF
         elif self.is_excel():
-            return DocumentTypeEnum.EXCEL
+            return FileUtilDocumentType.EXCEL
         elif self.is_word():
-            return DocumentTypeEnum.WORD
+            return FileUtilDocumentType.WORD
         elif self.is_ppt():
-            return DocumentTypeEnum.PPT
+            return FileUtilDocumentType.PPT
         elif self.is_image():
-            return DocumentTypeEnum.IMAGE
+            return FileUtilDocumentType.IMAGE
         else:
-            return DocumentTypeEnum.UNSUPPORTED
+            return FileUtilDocumentType.UNSUPPORTED
 
     def is_text(self) -> bool:
         """Check if the document type is a text type based on its MIME type."""
