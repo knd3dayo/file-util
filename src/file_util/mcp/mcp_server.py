@@ -13,6 +13,8 @@ from file_util.core.app import (
     list_zip_contents,
     extract_zip,
     create_zip,
+    export_data_to_excel,
+    import_data_from_excel,
 )
 mcp = FastMCP("file_util") #type :ignore
 
@@ -58,6 +60,8 @@ async def main():
         mcp.tool()(extract_zip)
         mcp.tool()(create_zip)
         mcp.tool()(extract_base64_to_text)
+        mcp.tool()(export_data_to_excel)
+        mcp.tool()(import_data_from_excel)
 
     if mode == "stdio":
         await mcp.run_async()

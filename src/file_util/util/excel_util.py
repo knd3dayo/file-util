@@ -39,3 +39,56 @@ class ExcelUtil:
         wb = openpyxl.load_workbook(filename)
         return wb.sheetnames
 
+    # データをExcelファイルにエクスポートする関数
+    @classmethod
+    def export_data_to_excel(cls, data: dict[str, list], filename, sheet_name: str| None ="Sheet1"):
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        if ws is None:
+            ws = wb.create_sheet()
+        if sheet_name is not None:
+            ws.title = sheet_name
+
+        # ヘッダー行の追加
+        headers = list(data.keys())
+        ws.append(headers)
+        # データ行の追加
+        num_rows = len(next(iter(data.values()), []))
+        for i in range(num_rows):
+            row = []
+            for header in headers:
+                column_data = data.get(header, [])
+                if i < len(column_data):
+                    row.append(column_data[i])
+                else:
+                    row.append("")
+            ws.append(row)
+        
+        wb.save(filename)
+
+    # Excelファイルの内容を辞書型で取得する関数
+    @classmethod
+    def import_data_from_excel(cls, filename, sheet_name: str | None ="Sheet1") -> dict[str, list]:
+        import openpyxl
+        wb = openpyxl.load_workbook(filename)
+        if sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+        else:
+            ws = wb.active
+        if ws is None:
+            return {}
+        
+        data: dict[str, list] = {}
+        rows = list(ws.iter_rows(values_only=True))
+        if not rows:
+            return data
+
+        headers = rows[0]
+        for header in headers:
+            data[str(header)] = []
+        for row in rows[1:]:
+            for header, cell in zip(headers, row):
+                data[str(header)].append(cell)
+        
+        return data          

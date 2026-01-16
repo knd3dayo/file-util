@@ -97,3 +97,28 @@ async def create_zip(
     This function creates a ZIP file at the specified path.
     """
     return ZipUtil.create_zip(file_paths, output_zip, password)
+
+# export_data_to_excel
+async def export_data_to_excel(
+    data: Annotated[dict[str, list], Field(description="Data to export to Excel, with keys as column headers and values as lists of column data")],
+    output_file: Annotated[str, Field(description="Path to the output Excel file")],
+    sheet_name: Annotated[Optional[str], Field(description="Name of the sheet to create in the Excel file")] = "Sheet1"
+    ) -> Annotated[bool, Field(description="True if data export was successful")]:
+
+    """
+    This function exports data to an Excel file at the specified path.
+    """
+    ExcelUtil.export_data_to_excel(data, output_file, sheet_name)
+    return True
+
+# import_data_from_excel
+async def import_data_from_excel(
+    input_file: Annotated[str, Field(description="Path to the Excel file to import data from")],
+    sheet_name: Annotated[Optional[str], Field(description="Name of the sheet to import data from")] = "Sheet1"
+    ) -> Annotated[dict[str, list], Field(description="Imported data from the Excel file, with keys as column headers and values as lists of column data")]:
+
+    """
+    This function imports data from an Excel file at the specified path.
+    """
+    data = ExcelUtil.import_data_from_excel(input_file, sheet_name)
+    return data

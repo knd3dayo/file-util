@@ -11,6 +11,8 @@ from file_util.core.app import (
     list_zip_contents,
     extract_zip,
     create_zip,
+    export_data_to_excel,
+    import_data_from_excel,
 )
 app = FastAPI()
 router = APIRouter()
@@ -41,6 +43,12 @@ router.add_api_route(path='/extract_zip', endpoint=extract_zip, methods=['POST']
 
 # ZIPファイルを作成する関数
 router.add_api_route(path='/create_zip', endpoint=create_zip, methods=['POST'])
+
+# export_data_to_excel
+router.add_api_route(path='/export_data_to_excel', endpoint=export_data_to_excel, methods=['POST'])
+
+# import_data_from_excel
+router.add_api_route(path='/import_data_from_excel', endpoint=import_data_from_excel, methods=['GET'])
 
 app.include_router(router, prefix="/api/file_util")
 if __name__ == "__main__":
